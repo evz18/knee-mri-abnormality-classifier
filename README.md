@@ -1,66 +1,73 @@
-# Knee MRI Abnormality Classification Using Transfer Learning
+# Knee MRI Abnormality Classification Using Deep Learning
+
+Multi-label classification of knee MRI scans using DICOM image preprocessing, MobileNetV2 transfer learning, and TensorFlow/Keras.
 
 ## Project Overview
 
-This project explores multi-label classification of knee MRI scans using deep learning. The goal was to develop a computer vision pipeline that processes DICOM MRI images and predicts 12 knee abnormalities, including ligament injuries, meniscus injuries, osteoarthritis, and joint effusion.
+This project explores whether a pretrained convolutional neural network (CNN) can identify 12 knee abnormalities from MRI scans, including ACL and meniscus injuries, osteoarthritis, and joint effusion.
 
-The project uses the RSNA Knee Abnormality Detection Kaggle dataset and MobileNetV2 transfer learning.
+The project uses the RSNA Knee Abnormality Detection Kaggle competition dataset. Because expert-labeled data was limited, training incorporated LLM-generated pseudo-labels alongside expert annotations.
 
-## Tools & Technologies
+## Technologies
 
-- **Python:** NumPy, pandas, pydicom, Pillow
-- **Deep Learning:** TensorFlow, Keras, MobileNetV2
-- **Evaluation:** ROC-AUC, PR-AUC
-- **Environment:** Kaggle Notebooks with GPU acceleration
+**Python:** pandas, NumPy, pydicom, Pillow  
+**Deep Learning:** TensorFlow, Keras, MobileNetV2  
+**Evaluation:** ROC-AUC, PR-AUC  
+**Environment:** Kaggle Notebooks, GPU acceleration
 
 ## Methodology
 
-**1. Data Preprocessing**
+### 1. MRI Preprocessing
 
-- Selected a sagittal fluid-sensitive MRI series for each study.
+- Selected one sagittal fluid-sensitive MRI series per study.
 - Extracted three slices at approximately 20%, 50%, and 80% of the series.
-- Normalized image intensities and resized slices to 160 × 160.
-- Stacked the three grayscale slices into a three-channel image.
+- Applied intensity normalization and resized images to 160 × 160 pixels.
+- Stacked the grayscale slices into a three-channel input.
 
-**2. Model Development**
+### 2. Model Architecture
 
-- Used ImageNet-pretrained MobileNetV2 as the feature extraction backbone.
-- Initially froze the backbone to train the classification head.
-- Fine-tuned the final 40 backbone layers, excluding Batch Normalization layers.
-- Used sigmoid outputs to predict 12 abnormalities independently.
+Used an ImageNet-pretrained MobileNetV2 backbone with global average pooling, a 256-unit dense layer, dropout, and 12 sigmoid output units.
 
-**3. Training**
+Training was performed in two stages: first with the backbone frozen, followed by fine-tuning the final 40 backbone layers while keeping Batch Normalization layers frozen.
 
-Because expert-labeled training data was limited, the model used a combination of expert labels and LLM-generated pseudo-labels. Uncertain pseudo-labels were masked during loss calculation.
+### 3. Training Strategy
 
-**4. Evaluation**
+The model was trained using 1,200 pseudo-labeled studies and 32 expert-labeled training studies.
+
+Pseudo-labels were derived from LLM-generated scores. Uncertain labels were masked during binary cross-entropy loss calculation.
+
+## Results
 
 | Evaluation | Result |
 |---|---|
 | Expert-labeled validation (11 studies) | 0.690 macro ROC-AUC |
-| Weak-label evaluation (300 studies) | Approximately 0.663 macro ROC-AUC |
+| Weak-label evaluation (300 studies) | ~0.663 macro ROC-AUC |
 | Kaggle public leaderboard | 0.631 public score |
 
-## Key Findings
+Fine-tuning improved results relative to the frozen-backbone baseline. However, the small expert-labeled validation set limits confidence in the estimated performance.
 
-Fine-tuning improved performance compared with the frozen-backbone baseline. However, the limited expert-labeled validation set introduces substantial uncertainty.
-
-The evaluation against LLM-generated labels measures agreement with pseudo-labels rather than independently verified clinical accuracy.
+The weak-label evaluation measures agreement with LLM-generated labels, not independently verified clinical accuracy. The Kaggle public score is reported separately because its evaluation setting may differ from local validation.
 
 ## Limitations
 
-- Only 58 expert-labeled studies were available across the original expert-labeled splits.
-- Validation results are based on a small sample.
+- Only 58 studies had expert annotations across the original expert-labeled splits.
+- Expert validation involved just 11 studies.
+- Pseudo-labels may introduce labeling errors.
 - Three selected slices do not represent the full MRI volume.
-- Pseudo-labels may contain labeling errors.
-- The model is a research and portfolio demonstration, not a clinically validated diagnostic system.
+- The model has not been clinically validated and is not intended for diagnostic use.
+
+## Notebooks
+
+**[Training and Evaluation](notebooks/01_mri_model_training_evaluation.ipynb)** — Data preprocessing, model training, fine-tuning, and evaluation.
+
+**[Kaggle Submission](notebooks/02_kaggle_submission.ipynb)** — Loading trained weights, generating test predictions, and creating the submission file.
 
 ## Reproducibility
 
-Training and inference were performed in Kaggle using competition data and GPU acceleration. The portfolio notebook retains saved execution outputs; it was not fully rerun after documentation cleanup.
+Training and inference were performed in Kaggle using competition data and GPU acceleration. The training notebook retains saved outputs and was not rerun after portfolio documentation cleanup.
 
-The inference notebook reconstructs the model architecture, loads saved weights, and generates competition predictions without retraining.
+The inference notebook loads previously trained weights without retraining. Reproduction requires access to the competition data, pseudo-label dataset, and saved model weights.
 
-## Project Takeaways
+## Key Takeaways
 
-This project provided hands-on experience with medical image preprocessing, transfer learning, fine-tuning pretrained CNNs, multi-label classification, and evaluating models with limited ground-truth labels.
+This project provided practical experience with medical imaging, DICOM preprocessing, transfer learning, multi-label classification, model evaluation, and working with limited ground-truth data.
