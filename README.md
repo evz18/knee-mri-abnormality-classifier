@@ -13,7 +13,7 @@ The project uses the RSNA Knee Abnormality Detection Kaggle competition dataset.
 **Python:** pandas, NumPy, pydicom, Pillow  
 **Deep Learning:** TensorFlow, Keras, MobileNetV2  
 **Evaluation:** ROC-AUC, PR-AUC  
-**Environment:** Kaggle Notebooks, GPU acceleration
+**Environment:** Kaggle Notebooks, VSCode, GPU acceleration
 
 ## Methodology
 
